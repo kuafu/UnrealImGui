@@ -14,6 +14,11 @@
 
 #pragma once
 
+// Lyra/XGame defines `DebugLog` as a macro (XDebugLog.h). Dear ImGui 1.91+ adds `ImGui::DebugLog()`;
+// the macro breaks parsing in unity builds. This strips ImGui's debug-log/metrics APIs instead.
+// If you rename the project macro, you can remove this line to restore ImGui debug tools.
+#define IMGUI_DISABLE_DEBUG_TOOLS
+
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
