@@ -9,6 +9,7 @@
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
 
+#include <Misc/Paths.h>
 #include <imgui.h>
 
 // MSVC warnings
@@ -268,7 +269,26 @@ void FImGuiContextManager::BuildFontAtlas(const TMap<FName, TSharedPtr<ImFontCon
 	{
 		ImFontConfig FontConfig = {};
 		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
-		FontAtlas.AddFontDefault(&FontConfig);
+		ImFont* DefaultFont = FontAtlas.AddFontDefault(&FontConfig);
+
+		// The embedded ImGui default font only contains basic Latin glyphs. Merge a local CJK font into the
+		// default font so debug panels can render Chinese quest text at the same size instead of fallback '?'.
+		if (DefaultFont)
+		{
+			ImFontConfig CJKFontConfig = {};
+			CJKFontConfig.MergeMode = true;
+			CJKFontConfig.DstFont = DefaultFont;
+			CJKFontConfig.SizePixels = FontConfig.SizePixels;
+			CJKFontConfig.GlyphOffset.y = FMath::RoundToFloat(CJKFontConfig.SizePixels / 13.0f);
+
+			const FString CJKFontPath = FPaths::FileExists(TEXT("C:/Windows/Fonts/simhei.ttf"))
+				? FString(TEXT("C:/Windows/Fonts/simhei.ttf"))
+				: FString(TEXT("C:/Windows/Fonts/msyh.ttc"));
+			if (FPaths::FileExists(CJKFontPath))
+			{
+				FontAtlas.AddFontFromFileTTF(TCHAR_TO_UTF8(*CJKFontPath), CJKFontConfig.SizePixels, &CJKFontConfig, FontAtlas.GetGlyphRangesChineseFull());
+			}
+		}
 
 		// Build custom fonts
 		for (const TPair<FName, TSharedPtr<ImFontConfig>>& CustomFontPair : CustomFontConfigs)
